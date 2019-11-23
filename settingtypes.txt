@@ -1,0 +1,4 @@
+hook.slingshot_entity_ttl (Time to live for items shot from slingshot) int 10 0 900
+
+hook.enable_chest (Enable portable chest) bool true
+hook.enable_slingshot (Enable slingshot) bool true

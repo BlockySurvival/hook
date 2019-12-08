@@ -48,18 +48,9 @@ hook.slingshot_onuse=function(itemstack, user)
 end
 
 minetest.register_tool("hook:slingshot", {
-	description = "Slingshot",
+	description = "Slingshot (currently disabled)",
 	range = 4,
 	inventory_image = "hook_slingshot.png",
-	on_use=function(itemstack, user, pointed_thing)
-		local ref = pointed_thing.ref
-		if ref and not (ref:get_luaentity() and ref:get_luaentity().name == "__builtin:item") then
-			hook.punch(user,ref,4)
-			return itemstack
-		end
-		hook.slingshot_onuse(itemstack, user)
-		return itemstack
-	end,
 	on_place=function(itemstack, user, pointed_thing)
 		local item=itemstack:to_table()
 		local meta=minetest.deserialize(item["metadata"])

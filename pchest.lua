@@ -9,20 +9,31 @@ minetest.register_craft({
 	}
 })
 
-pchest.setpchest=function(pos,user)
+pchest.setpchest=function(pos,user,item)
 	local meta = minetest.get_meta(pos)
 	meta:set_string("owner", user:get_player_name())
 	meta:set_int("state", 0)
 	meta:get_inventory():set_size("main", 32)
 	meta:get_inventory():set_size("trans", 1)
+	local description = "Portable locked chest"
+	if item.meta.description then
+		description = item.meta.description
+	end
+	meta:set_string("description", description)
+	pchest.setformspec(meta)
+	meta:set_string("infotext", "PChest by: " .. user:get_player_name())
+end
+
+pchest.setformspec = function (meta)
 	meta:set_string("formspec",
-	"size[8,8]" ..
-	"list[context;main;0,0;8,4;]" ..
+	"size[8,9]" ..
+	"field[0.25,0.5;4,0.5;"..
+	"description_textbox;Item description (press enter to save):;".. meta:get_string("description") .."]"..
+	"list[context;main;0,1;8,4;]" ..
 	"list[context;trans;0,0;0,0;]" ..
-	"list[current_player;main;0,4.3;8,4;]" ..
+	"list[current_player;main;0,5.3;8,4;]" ..
 	"listring[current_player;main]" ..
 	"listring[current_name;main]")
-	meta:set_string("infotext", "PChest by: " .. user:get_player_name())
 end
 
 minetest.register_tool("hook:pchest", {
@@ -35,7 +46,7 @@ minetest.register_tool("hook:pchest", {
 		local p=minetest.dir_to_facedir(user:get_look_dir())
 		local item=itemstack:to_table()
 		minetest.set_node(pointed_thing.above, {name = "hook:pchest_node",param1="",param2=p})
-		pchest.setpchest(pointed_thing.above,user)
+		pchest.setpchest(pointed_thing.above,user,item)
 			
 		minetest.sound_play("default_place_node_hard", {pos=pointed_thing.above, gain = 1.0, max_hear_distance = 5})
 
@@ -121,6 +132,13 @@ minetest.register_node("hook:pchest_node", {
 		local m = minetest.get_meta(pos)
 		return m:get_string("owner") == "" and m:get_inventory():is_empty("main")
 	end,
+	on_receive_fields = function(pos, formname, fields, sender)
+		local meta = minetest.get_meta(pos)
+		if fields.description_textbox then
+			meta:set_string("description", fields.description_textbox)
+		end
+		pchest.setformspec(meta)
+	end,
 	on_punch = function(pos, node, player, pointed_thing)
 		local meta=minetest.get_meta(pos)
 		local name = player:get_player_name()
@@ -134,7 +152,7 @@ minetest.register_node("hook:pchest_node", {
 			table.insert(items,v:to_table())
 		end
 		local item = ItemStack("hook:pchest"):to_table()
-		item.meta={items=minetest.serialize(items)}
+		item.meta={items=minetest.serialize(items),description=meta:get_string('description')}
 		pinv:add_item("main", ItemStack(item))
 		minetest.set_node(pos, {name = "air"})
 		minetest.sound_play("default_dig_dig_immediate", {pos=pos, gain = 1.0, max_hear_distance = 5,})

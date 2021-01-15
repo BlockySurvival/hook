@@ -133,7 +133,11 @@ minetest.register_node("hook:pchest_node", {
 		return m:get_string("owner") == "" and m:get_inventory():is_empty("main")
 	end,
 	on_receive_fields = function(pos, formname, fields, sender)
+		local name = sender:get_player_name()
 		local meta = minetest.get_meta(pos)
+		if name ~= meta:get_string("owner") then
+			return false
+		end
 		if fields.description_textbox then
 			meta:set_string("description", fields.description_textbox)
 		end

@@ -17,28 +17,36 @@ pchest.setpchest=function(pos,user,item)
 	meta:set_int("state", 0)
 	meta:get_inventory():set_size("main", 32)
 	meta:get_inventory():set_size("trans", 1)
+
+	local description = "Portable locked chest"
+	if item.meta.description then
+		description = item.meta.description
+	end
+	meta:set_string("description", description)
+
 	local tubelib = "true"
 	if item.meta.tubelib then
 		tubelib = item.meta.tubelib
 	end
 	meta:set_string("tubelib", tubelib)
+
 	pchest.setformspec(meta)
 	meta:set_string("infotext", "PChest by: " .. user:get_player_name())
 end
 
 pchest.setformspec = function (meta)
-	local header_space = 0
 	local fieldspec = ""
 	if tubelibEnabled then
-		header_space = 1
 		fieldspec = "checkbox[4,0;toggle_tubelib;Enable tubelib interaction;"..meta:get_string("tubelib").."]"
 	end
 	meta:set_string("formspec",
-		"size[8,".. (header_space+8) .."]" ..
+		"size[8,9]" ..
 		fieldspec..
-		"list[context;main;0,".. (header_space+0) ..";8,4;]" ..
+		"field[0.25,0.5;4,0.5;"..
+		"description_textbox;Item description (press enter to save):;".. meta:get_string("description") .."]"..
+		"list[context;main;0,1;8,4;]" ..
 		"list[context;trans;0,0;0,0;]" ..
-		"list[current_player;main;0,".. (header_space+4.3) ..";8,4;]" ..
+		"list[current_player;main;0,5.3;8,4;]" ..
 		"listring[current_player;main]" ..
 		"listring[current_name;main]")
 end
@@ -145,6 +153,9 @@ minetest.register_node("hook:pchest_node", {
 		if name ~= meta:get_string("owner") then
 			return false
 		end
+		if fields.description_textbox then
+			meta:set_string("description", fields.description_textbox)
+		end
 		if fields.toggle_tubelib then
 			meta:set_string("tubelib", fields.toggle_tubelib)
 		end
@@ -163,7 +174,7 @@ minetest.register_node("hook:pchest_node", {
 			table.insert(items,v:to_table())
 		end
 		local item = ItemStack("hook:pchest"):to_table()
-		item.meta={items=minetest.serialize(items),tubelib=meta:get_string('tubelib')}
+		item.meta={items=minetest.serialize(items),tubelib=meta:get_string('tubelib'),description=meta:get_string('description')}
 		pinv:add_item("main", ItemStack(item))
 		minetest.set_node(pos, {name = "air"})
 		minetest.sound_play("default_dig_dig_immediate", {pos=pos, gain = 1.0, max_hear_distance = 5,})

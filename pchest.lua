@@ -178,7 +178,8 @@ minetest.register_node("hook:pchest_node", {
 		pinv:add_item("main", ItemStack(item))
 		minetest.set_node(pos, {name = "air"})
 		minetest.sound_play("default_dig_dig_immediate", {pos=pos, gain = 1.0, max_hear_distance = 5,})
-	end
+	end,
+	on_blast = function () end
 })
 
 if tubelibEnabled then

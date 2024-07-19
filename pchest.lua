@@ -11,9 +11,14 @@ minetest.register_craft({
 	}
 })
 
+pchest.infotext = function(player_name, description)
+	return description..", owned by " .. player_name
+end
+
 pchest.setpchest=function(pos,user,item)
 	local meta = minetest.get_meta(pos)
-	meta:set_string("owner", user:get_player_name())
+	local player_name = user:get_player_name()
+	meta:set_string("owner", player_name)
 	meta:set_int("state", 0)
 	meta:get_inventory():set_size("main", 32)
 	meta:get_inventory():set_size("trans", 1)
@@ -31,7 +36,7 @@ pchest.setpchest=function(pos,user,item)
 	meta:set_string("tubelib", tubelib)
 
 	pchest.setformspec(meta)
-	meta:set_string("infotext", "PChest by: " .. user:get_player_name())
+	meta:set_string("infotext", pchest.infotext(player_name, description))
 end
 
 pchest.setformspec = function (meta)
@@ -62,7 +67,7 @@ minetest.register_tool("hook:pchest", {
 		local item=itemstack:to_table()
 		minetest.set_node(pointed_thing.above, {name = "hook:pchest_node",param1="",param2=p})
 		pchest.setpchest(pointed_thing.above,user,item)
-			
+
 		minetest.sound_play("default_place_node_hard", {pos=pointed_thing.above, gain = 1.0, max_hear_distance = 5})
 
 		if not (item.meta or item.metadata) then
@@ -184,38 +189,49 @@ minetest.register_node("hook:pchest_node", {
 
 if tubelibEnabled then
 	tubelib.register_node("hook:pchest_node", {}, {
-	    on_pull_item = function(pos, side, player_name)
+		on_pull_item = function(pos, side, player_name)
 			local meta = minetest.get_meta(pos)
 			if meta:get_string('tubelib') ~= 'true' then
 				return nil
 			end
-	        local inv = meta:get_inventory()
-	        for _, stack in pairs(inv:get_list("main")) do
-	            if not stack:is_empty() then
-	                return inv:remove_item("main", stack:get_name())
-	            end
-	        end
-	        return nil
-	    end,
-	    on_push_item = function(pos, side, item, player_name)
+			local inv = meta:get_inventory()
+			for _, stack in pairs(inv:get_list("main")) do
+				if not stack:is_empty() then
+					return inv:remove_item("main", stack:get_name())
+				end
+			end
+			return nil
+		end,
+		on_push_item = function(pos, side, item, player_name)
 			local meta = minetest.get_meta(pos)
 			if meta:get_string('tubelib') ~= 'true' then
 				return false
 			end
-	        local inv = meta:get_inventory()
-	        if inv:room_for_item("main", item) then
-	            inv:add_item("main", item)
-	            return true
-	        end
-	        return false
-	    end,
-	    on_unpull_item = function(pos, side, item, player_name)
-	        local inv = minetest.get_meta(pos):get_inventory()
-	        if inv:room_for_item("main", item) then
-	            inv:add_item("main", item)
-	            return true
-	        end
-	        return false
-	    end,
+			local inv = meta:get_inventory()
+			if inv:room_for_item("main", item) then
+				inv:add_item("main", item)
+				return true
+			end
+			return false
+		end,
+		on_unpull_item = function(pos, side, item, player_name)
+			local inv = minetest.get_meta(pos):get_inventory()
+			if inv:room_for_item("main", item) then
+				inv:add_item("main", item)
+				return true
+			end
+			return false
+		end,
 	})
 end
+
+minetest.register_lbm({
+	name = "hook:pchest_node__description_infotext",
+	nodenames = {"hook:pchest_node"},
+	action = function(pos, node)
+		local meta = minetest.get_meta(pos)
+		local player_name = meta:get_string("owner")
+		local description = meta:get_string("description")
+		meta:set_string("infotext", pchest.infotext(player_name, description))
+	end,
+})

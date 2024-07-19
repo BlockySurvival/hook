@@ -160,6 +160,7 @@ minetest.register_node("hook:pchest_node", {
 		end
 		if fields.description_textbox then
 			meta:set_string("description", fields.description_textbox)
+			meta:set_string("infotext", pchest.infotext(name, fields.description_textbox))
 		end
 		if fields.toggle_tubelib then
 			meta:set_string("tubelib", fields.toggle_tubelib)
